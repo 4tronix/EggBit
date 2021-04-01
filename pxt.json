@@ -1,6 +1,6 @@
 {
     "name": "EggBit",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "description": "Microsoft MakeCode package for 4tronix EggBit range of wearables",
     "license": "MIT",
     "dependencies": {
@@ -9,10 +9,7 @@
     },
     "files": [
         "README.md",
-        "eggbit.ts",
-        "main.cpp",
-        "shims.d.ts",
-        "enums.d.ts"
+        "eggbit.ts"
         ],
     "testFiles": [
         "tests.ts"

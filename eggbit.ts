@@ -19,9 +19,9 @@ enum EBPins
 enum EBEvents
 {
     //% block="down"
-    Press = DAL.MICROBIT_BUTTON_EVT_UP,
+    Press = DAL.MICROBIT_PIN_EVT_RISE,
     //% block="up"
-    Release = DAL.MICROBIT_BUTTON_EVT_DOWN
+    Release = DAL.MICROBIT_PIN_EVT_FALL
 }
 
 /**
@@ -39,6 +39,21 @@ enum EBButtons
     Blue
 }
 
+
+/**
+  * Mouth shapes
+  */
+enum EBExpression
+{
+    Neutral,
+    Smile,
+    OpenSmile,
+    Sad,
+    OpenSad,
+    Surprise,
+    AllOff,
+    AllOn
+}
 
 /**
   * Enumeration of mouth parts
@@ -115,15 +130,34 @@ namespace eggbit
     let ledCount = 9;
     let _updateMode = EBMode.Auto;
     let btEnabled = false;
-
     let _initEvents = true;
+
+    let larsson: number;
+    let scandir: number;
+    let _scanning = false;
+    let scanColour1 = 0xff0000;
+    let scanColour2 = 0x0f0000;
+    let scanColour3 = 0x030000;
+
+    // bar graph paarameters. Default range 0-100 in Red
+    let graphLow = 0;
+    let graphHigh = 100;
+    let graphCol1 = 0xff0000;
+    let graphCol2 = 0xff0000;
+
 
 // General. Buttons, Ultrasonic, Mouth LEDs
 
-    //% shim=eggbit::init
-    function init(): void
+    function initEvents(): void
     {
-        return;
+        if (_initEvents)
+        {
+            pins.setEvents(DigitalPin.P16, PinEventType.Edge);
+            pins.setEvents(DigitalPin.P14, PinEventType.Edge);
+            pins.setEvents(DigitalPin.P12, PinEventType.Edge);
+            pins.setEvents(DigitalPin.P8, PinEventType.Edge);
+            _initEvents = false;
+        }
     }
 
     /**
@@ -131,10 +165,10 @@ namespace eggbit
       */
     //% weight=100
     //% blockId=ebOnEvent block="on button%button|%event"
-    //% subcategory=General
+    //% subcategory="Input/Output"
     export function onEvent(button: EBPins, event: EBEvents, handler: Action)
     {
-        init();
+        initEvents();
         control.onEvent(<number>button, <number>event, handler); // register handler
     }
 
@@ -142,9 +176,9 @@ namespace eggbit
       * check button states
       * @param buttonID Button to check
       */
-    //% blockId="ebCheckButton" block="button %buttonID|pressed"
+    //% blockId="ebCheckButton" block="button%buttonID|pressed"
     //% weight=90
-    //% subcategory=General
+    //% subcategory="Input/Output"
     export function readButton(buttonID: EBButtons): boolean
     {
 	switch (buttonID)
@@ -157,22 +191,60 @@ namespace eggbit
 	}
     }
 
+    function setUpper(mode: number): void
+    {
+        pins.digitalWritePin(DigitalPin.P0, mode);
+    }
+
+    function setMiddle(mode: number): void
+    {
+        pins.digitalWritePin(DigitalPin.P1, mode);
+    }
+
+    function setLower(mode: number): void
+    {
+        pins.digitalWritePin(DigitalPin.P2, mode);
+    }
+
+    /**
+      * Set expression (not EggBit Ovoid)
+      * @param shape Expression to select
+      */
+    //% blockId="ebSetExpression" block="expression%shape"
+    //% weight=80
+    //% subcategory="Input/Output"
+    //% mode.shadow="toggleOnOff"
+    export function setExpression(shape: EBExpression)
+    {
+	switch (shape)
+        {
+            case EBExpression.Neutral: setLower(0); setMiddle(1); setUpper(0); break;
+            case EBExpression.Smile: setLower(1); setMiddle(0); setUpper(0); break;
+            case EBExpression.OpenSmile: setLower(1); setMiddle(1); setUpper(0); break;
+            case EBExpression.Sad: setLower(0); setMiddle(0); setUpper(1); break;
+            case EBExpression.OpenSad: setLower(0); setMiddle(1); setUpper(1); break;
+            case EBExpression.Surprise: setLower(1); setMiddle(0); setUpper(1); break;
+            case EBExpression.AllOff: setLower(0); setMiddle(0); setUpper(0); break;
+            case EBExpression.AllOn: setLower(1); setMiddle(1); setUpper(1); break;
+        }
+    }
+
     /**
       * Set mouth parts on/off (not EggBit Ovoid)
       * @param mouthPart Section of mouth to turn on/off
       * @param mode Select On or Off
       */
     //% blockId="ebSetMouth" block="mouth%mouthPart|%mode"
-    //% weight=80
-    //% subcategory=General
+    //% weight=70
+    //% subcategory="Input/Output"
     //% mode.shadow="toggleOnOff"
     export function setMouth(mouthPart: EBMouth, mode: boolean)
     {
 	switch (mouthPart)
 	{
-            case EBMouth.Upper: pins.digitalWritePin(DigitalPin.P0, mode?1:0); break;
-            case EBMouth.Middle: pins.digitalWritePin(DigitalPin.P1, mode?1:0); break;
-            case EBMouth.Lower: pins.digitalWritePin(DigitalPin.P2, mode?1:0); break;
+            case EBMouth.Upper: setUpper(mode?1:0); break;
+            case EBMouth.Middle: setMiddle(mode?1:0); break;
+            case EBMouth.Lower: setLower(mode?1:0); break;
 	}
     }
 
@@ -181,8 +253,8 @@ namespace eggbit
     * @param unit desired conversion unit
     */
     //% blockId="ebSonar" block="read sonar as %unit"
-    //% weight=70
-    //% subcategory=General
+    //% weight=60
+    //% subcategory="Input/Output"
     export function sonar(unit: ebPingUnit): number
     {
         // send pulse
@@ -236,8 +308,8 @@ namespace eggbit
       * Sets all LEDs to a given color (range 0-255 for r, g, b).
       * @param rgb RGB color of the LED
       */
-    //% blockId="bcSetLedColor" block="set all LEDs to%rgb=FireColours"
-    //% subcategory=Leds
+    //% blockId="bcSetLedColor" block="set all FireLEDs to%rgb=FireColours"
+    //% subcategory=FireLeds
     //% weight=100
     export function setLedColor(rgb: number)
     {
@@ -248,8 +320,8 @@ namespace eggbit
     /**
       * Clear all leds.
       */
-    //% blockId="bcLedClear" block="clear all LEDs"
-    //% subcategory=Leds
+    //% blockId="bcLedClear" block="clear all FireLEDs"
+    //% subcategory=FireLeds
     //% weight=90
     export function ledClear()
     {
@@ -262,8 +334,8 @@ namespace eggbit
      * @param ledId position of the LED (0 to 5)
      * @param rgb RGB color of the LED
      */
-    //% blockId="bcSetPixelColor" block="set LED at%ledId|to%rgb=FireColours"
-    //% subcategory=Leds
+    //% blockId="bcSetPixelColor" block="set FireLED at%ledId|to%rgb=FireColours"
+    //% subcategory=FireLeds
     //% weight=80
     export function setPixelColor(ledId: number, rgb: number)
     {
@@ -274,8 +346,8 @@ namespace eggbit
     /**
       * Shows a rainbow pattern on all LEDs.
       */
-    //% blockId="ebLedRainbow" block="set LED rainbow"
-    //% subcategory=Leds
+    //% blockId="ebLedRainbow" block="set FireLED rainbow"
+    //% subcategory=FireLeds
     //% weight=70
     export function ledRainbow()
     {
@@ -287,7 +359,7 @@ namespace eggbit
      * Shift LEDs forward and clear with zeros.
      */
     //% blockId="bcLedShift" block="shift LEDs"
-    //% subcategory=Leds
+    //% subcategory=FireLeds
     //% weight=60
     export function ledShift()
     {
@@ -298,8 +370,8 @@ namespace eggbit
     /**
      * Rotate LEDs forward.
      */
-    //% blockId="bcLedRotate" block="rotate LEDs"
-    //% subcategory=Leds
+    //% blockId="bcLedRotate" block="rotate FireLEDs"
+    //% subcategory=FireLeds
     //% weight=50
     export function ledRotate()
     {
@@ -313,7 +385,7 @@ namespace eggbit
      * Set the brightness of the FireLed band
      * @param brightness a measure of LED brightness in 0-255. eg: 40
      */
-    //% blockId="ebLedBrightness" block="set LED brightness%brightness"
+    //% blockId="ebLedBrightness" block="set FireLED brightness%brightness"
     //% brightness.min=0 brightness.max=255
     //% weight=100
     //% advanced=true
@@ -325,7 +397,7 @@ namespace eggbit
 
     /**
       * Set LED update mode (Manual or Automatic)
-      * @param updateMode setting automatic will show LED changes automatically
+      * @param updateMode setting automatic will show FireLED changes automatically
       */
     //% blockId="ebSetUpdateMode" block="set %updateMode|update mode"
     //% weight=90
@@ -338,7 +410,7 @@ namespace eggbit
     /**
       * Show LED changes
       */
-    //% blockId="ebLedShow" block="show LED changes"
+    //% blockId="ebLedShow" block="show FireLED changes"
     //% weight=80
     //% advanced=true
     export function ledShow(): void
@@ -381,5 +453,136 @@ namespace eggbit
         return ((r & 0xFF) << 16) | ((g & 0xFF) << 8) | (b & 0xFF);
     }
 
+    /**
+      * Start Scanner
+      * @param colour the colour to use for scanning
+      * @param delay time in ms between scan steps, eg: 100,50,200,500
+      */
+    //% blockId="StartScanner" block="start scan%colour=FireColours|with delay%delay|ms"
+    //% subcategory=FireLeds
+    //% delay.shadow=timePicker
+    //% delay.min=1 delay.max=10000
+    //% weight=50
+    export function startScanner(colour: number, delay: number): void
+    {
+        scanColour1 = colour;
+        scanColour2 = reduce(scanColour1, 8);
+        scanColour3 = reduce(scanColour2, 4);
+        if(_scanning == false)
+        {
+            _scanning = true;
+            control.inBackground(() =>
+            {
+                while (_scanning)
+                {                                
+                    ledScan();
+                    ledShow();
+                    basic.pause(delay);
+                }
+            })
+        }
+    }
+
+    /**
+      * Reduce colour RGB separately by divisor
+      */
+    function reduce(colour: number, reducer: number): number
+    {
+        let red = ((colour & 0xff0000) / reducer) & 0xff0000;
+        let green = ((colour & 0x00ff00) / reducer) & 0x00ff00;
+        let blue = ((colour & 0x0000ff) / reducer) & 0x0000ff;
+        return red + green + blue;
+    }
+
+    /**
+      * Stop Scanner
+      */
+    //% blockId="StopScanner" block="stop scanner"
+    //% subcategory=FireLeds
+    //% weight=40
+    export function stopScanner(): void
+    {
+        _scanning = false;
+    }
+
+    /**
+     * Use all LEDs as Larsson Scanner. Each call moves the scan by one pixel
+     */
+    //% subcategory=FireLeds
+    //% blockId="LedScan" block="scan all FireLeds"
+    //% weight=35
+    //% deprecated=true
+    export function ledScan(): void
+    {
+        if (!larsson)
+        {
+            larsson = 1;
+            scandir = 1;
+        }
+        larsson += scandir;
+        if (larsson >= (ledCount - 1))
+            scandir = -1;
+        else if (larsson <= 0)
+            scandir = 1;
+        for (let x = 0; x < ledCount; x++)
+        {
+            if ((x == (larsson - 2)) || (x == (larsson + 2)))
+                setPixelColor(x, scanColour3);
+            else if ((x == (larsson - 1)) || (x == (larsson + 1)))
+                setPixelColor(x, scanColour2);
+            else if (x == larsson)
+                setPixelColor(x, scanColour1);
+            else
+                setPixelColor(x, 0);
+        }
+    }
+
+    /**
+      * Set Bargraph Parameters
+      * @param lowest Lowest value to graph (single LED at colour1)
+      * @param highest highest value to graph (all LEDs lit, highest at colour2)
+      * @param colour1 the colour for lowest value
+      * @param colour2 the colour for highest value
+      */
+    //% blockId="SetBargraph" block="set graph%lowest|to%highest|from%colour1=FireColours|to%colour2=FireColours"
+    //% inlineInputMode=inline
+    //% subcategory=FireLeds
+    //% weight=30
+    export function setBargraph(lowest: number, highest: number, colour1: number, colour2: number): void
+    {
+        graphLow = lowest;
+        graphHigh = highest;
+        graphCol1 = colour1;
+        graphCol2 = colour2;
+    }
+
+    /**
+      * Draw bargraph using value and previosuly set parameters
+      * @param value value to draw in graph
+      */
+    //% blockId="DrawBargraph" block="draw bar graph with%value"
+    //% subcategory=FireLeds
+    //% weight=20
+    export function drawBargraph(value: number): void
+    {
+        let deltaVal = (graphHigh - graphLow) / ledCount;
+        let deltaRed = (((graphCol2-graphCol1) & 0xff0000) / ledCount) & 0xff0000;
+        let deltaGreen = (((graphCol2-graphCol1) & 0x00ff00) / ledCount) & 0x00ff00;
+        let deltaBlue = (((graphCol2-graphCol1) & 0x0000ff) / ledCount) & 0x0000ff;
+        let pRed = graphCol2 & 0xff0000;
+        let pGreen = graphCol2 & 0x00ff00;
+        let pBlue = graphCol2 & 0x0000ff;
+        for (let i=0; i < ledCount; i++)
+        {
+            if (value >= (graphHigh - deltaVal * (i+1)))
+                fire().setPixel(ledCount-i-1, pRed+pGreen+pBlue);
+            else
+                fire().setPixel(ledCount-i-1, 0);
+            pRed = (pRed-deltaRed) & 0xff0000;
+            pGreen = (pGreen-deltaGreen) & 0x00ff00;
+            pBlue = (pBlue-deltaBlue) & 0x0000ff;
+        }
+        updateLEDs();
+    }
 
 }
