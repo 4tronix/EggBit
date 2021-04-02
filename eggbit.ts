@@ -142,8 +142,12 @@ namespace eggbit
     // bar graph paarameters. Default range 0-100 in Red
     let graphLow = 0;
     let graphHigh = 100;
-    let graphCol1 = 0xff0000;
-    let graphCol2 = 0xff0000;
+    let gRed1 = 0xff0000;
+    let gRed2 = 0xff0000;
+    let gGreen1 = 0x000000;
+    let gGreen2 = 0x000000;
+    let gBlue1 = 0x000000;
+    let gBlue2 = 0x000000;
 
 
 // General. Buttons, Ultrasonic, Mouth LEDs
@@ -552,8 +556,12 @@ namespace eggbit
     {
         graphLow = lowest;
         graphHigh = highest;
-        graphCol1 = colour1;
-        graphCol2 = colour2;
+        gRed1 = (colour1 & 0xff0000) >> 16;
+        gRed2 = (colour2 & 0xff0000) >> 16;
+        gGreen1 = (colour1 & 0x00ff00) >> 8;
+        gGreen2 = (colour2 & 0x00ff00) >> 8;
+        gBlue1 = (colour1 & 0x0000ff);
+        gBlue2 = (colour2 & 0x0000ff);
     }
 
     /**
@@ -565,22 +573,27 @@ namespace eggbit
     //% weight=20
     export function drawBargraph(value: number): void
     {
-        let deltaVal = (graphHigh - graphLow) / ledCount;
-        let deltaRed = (((graphCol2-graphCol1) & 0xff0000) / ledCount) & 0xff0000;
-        let deltaGreen = (((graphCol2-graphCol1) & 0x00ff00) / ledCount) & 0x00ff00;
-        let deltaBlue = (((graphCol2-graphCol1) & 0x0000ff) / ledCount) & 0x0000ff;
-        let pRed = graphCol2 & 0xff0000;
-        let pGreen = graphCol2 & 0x00ff00;
-        let pBlue = graphCol2 & 0x0000ff;
+        let deltaRed = (gRed2 - gRed1) / (ledCount-1);
+        let deltaGreen = (gGreen2 - gGreen1) / (ledCount-1);
+        let deltaBlue = (gBlue2 - gBlue1) / (ledCount-1);
+        let pRed = gRed1;
+        let pGreen = gGreen1;
+        let pBlue = gBlue1;
         for (let i=0; i < ledCount; i++)
         {
-            if (value >= (graphHigh - deltaVal * (i+1)))
-                fire().setPixel(ledCount-i-1, pRed+pGreen+pBlue);
+            if (i == (ledCount-1)) // remove rounding errors...
+            {
+                pRed = gRed2;
+                pGreen = gGreen2;
+                pBlue = gBlue2;
+            }
+            if (value >= (graphLow + ((graphHigh - graphLow) * i) / (ledCount-1)))
+                fire().setPixel(i, (pRed << 16) | (pGreen << 8) | (pBlue));
             else
-                fire().setPixel(ledCount-i-1, 0);
-            pRed = (pRed-deltaRed) & 0xff0000;
-            pGreen = (pGreen-deltaGreen) & 0x00ff00;
-            pBlue = (pBlue-deltaBlue) & 0x0000ff;
+                fire().setPixel(i, 0);
+            pRed = (pRed+deltaRed) & 0xff;
+            pGreen = (pGreen+deltaGreen) & 0xff;
+            pBlue = (pBlue+deltaBlue) & 0xff;
         }
         updateLEDs();
     }
