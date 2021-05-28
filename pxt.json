@@ -1,6 +1,6 @@
 {
     "name": "EggBit",
-    "version": "0.0.2",
+    "version": "0.1.0",
     "description": "Microsoft MakeCode package for 4tronix EggBit range of wearables",
     "license": "MIT",
     "dependencies": {

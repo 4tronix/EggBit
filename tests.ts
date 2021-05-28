@@ -1,59 +1,50 @@
 {
-  // Read Joystick X axis
-  basic.showNumber(bitcommander.readJoystick(BCJoystick.X));
-  basic.pause(100);
+  // Check the buttons
+  eggbit.onEvent(EBPins.Blue, EBEvents.Press, function () {
+    eggbit.setExpression(EBExpression.Sad)
+  })
+  eggbit.onEvent(EBPins.Yellow, EBEvents.Release, function () {
+    eggbit.setExpression(EBExpression.Surprise)
+  })
+  if (eggbit.readButton(EBButtons.Red)) {
+    eggbit.setExpression(EBExpression.Smile)
+  }
 
-  // Read Joystick Y axis
-  basic.showNumber(bitcommander.readJoystick(BCJoystick.Y));
-  basic.pause(100);
+  // Check the mouth parts
+  eggbit.setExpression(EBExpression.AllOff)
+  basic.pause(1000);
 
-  // Read Dial
-  basic.showNumber(bitcommander.readDial());
-  basic.pause(100);
+  eggbit.setExpression(EBExpression.Sad)
+  basic.pause(1000);
 
-  // Show states of all buttons
-  basic.showNumber(bitcommander.readButton(BCButtons.Red));
-  basic.showNumber(bitcommander.readButton(BCButtons.Yellow));
-  basic.showNumber(bitcommander.readButton(BCButtons.Green));
-  basic.showNumber(bitcommander.readButton(BCButtons.Blue));
-  basic.showNumber(bitcommander.readButton(BCButtons.Joystick));
-  basic.pause(100);
+  eggbit.setExpression(EBExpression.Neutral)
+  basic.pause(1000);
 
-  // Play tune on Speaker
-  music.playTone(262, music.beat(BeatFraction.Whole));
-  basic.pause(100);
+  eggbit.setExpression(EBExpression.Smile)
+  basic.pause(1000);
 
-  // Show all leds
-  bitbot.neoSetColor(neopixel.colors(NeoPixelColors.Red));
-  bitbot.neoShow();
+  eggbit.setExpression(EBExpression.AllOn)
+  basic.pause(1000);
+
+  // Read the ultrasonic
+  basic.showNumber(eggbit.sonar(ebPingUnit.Centimeters))
+  basic.pause(1000);
+
+  // Set all FireLeds to Red
+  eggbit.setLedColor(0xFF0000);
+  basic.pause(1000);
 
   // Clear all leds
-  bitbot.neoClear();
-  bitbot.neoShow();
+  eggbit.ledClear();
+  basic.pause(1000);
 
-  // Show led at position 0
-  bitbot.neoSetPixelColor(0, neopixel.colors(NeoPixelColors.Red));
-  bitbot.neoShow();
+  // Set FireLed at position 3 to Green
+  eggbit.setPixelColor(3, 0x00FF00);
+  basic.pause(1000);
 
-  // Show led rainbow
-  bitbot.neoRainbow();
-  bitbot.neoShow();
+  // Start FireLed scanner for 5 seconds
+  eggbit.startScanner(0xFF0000, 100)
+  basic.pause(5000)
+  eggbit.stopScanner();
 
-  // Show led rainbow and shift
-  bitbot.neoRainbow();
-  bitbot.neoShift();
-  bitbot.neoShow();
-
-  // Show led rainbow and rotate
-  bitbot.neoRainbow();
-  bitbot.neoRotate();
-  bitbot.neoShow();
-
-  // Set brightness of leds
-  bitbot.neoBrightness(100);
-  bitbot.neoShow();
-
-  // Use neo() variable
-  bitbot.neo().clear();
-  bitbot.neo().show();
 }
