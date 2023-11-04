@@ -24,17 +24,17 @@ eggbit.onEvent(EBPins.Blue, EBEvents.Press, function () {
 })
 ```
 
-## Setting the Mouth
+## Setting the Mouth Leds
 
-EggBit has three sections to the mouth: Upper, Middle and Lower. You can directly set the individual parts of the mouth using the setMouth function
+EggBit has three sections to the mouth: Upper, Middle and Lower. You can directly set the individual parts of the mouth using the `setMouth(...)` function:
 
-```sig
+```block
 eggbit.setMouth(EBMouth.Upper, true)
 ```
 
-Alternatively, you can use the predefined expressions for all 8 possible configurations of the mouth:
+Alternatively, you can use the predefined expressions for all 8 possible configurations of the mouth. Expressions are Neutral, Smile, OpenSmile, Sad, OpenSad, Surprise, AllOff, AllOn:
 
-```sig
+```block
 eggbit.setExpression(EBExpression.Smile)
 ```
 
@@ -42,8 +42,10 @@ eggbit.setExpression(EBExpression.Smile)
 
 The ultrasonic distance sensor can be read in centimetres, inches or microseconds. The value returned is the distance to the nearest reflective object within range:
 
-```sig
-eggbit.sonar(ebPingUnit.Centimeters)
+```blocks
+let distance_us = eggbit.sonar(ebPingUnit.MicroSeconds)
+let distance_cm = eggbit.sonar(ebPingUnit.Centimeters)
+let distance_inch = eggbit.sonar(ebPingUnit.Inches)
 ```
 
 
@@ -52,56 +54,78 @@ eggbit.sonar(ebPingUnit.Centimeters)
 The EggBit has 9 Fireleds
 The default update mode is automatic, so LEDs will be updated immediately after changes:
 
-```blocks
-// Set all leds to Red
-eggbit.setLedColor(0xff0000);
+Set all leds to Red:
 
-// Clear all leds
-eggbit.ledClear();
+```block
+eggbit.setLedColor(0xff0000)
+```
 
-// Set Fireled at position 1 to Green
-eggbit.setPixelColor(0, 0x00ff00);
+Clear all leds:
 
-// Show rainbow across all Fireleds (Red..Violet)
-eggbit.ledRainbow();
+```block
+eggbit.ledClear()
+```
 
-// Show led rainbow and shift
-eggbit.ledRainbow();
-eggbit.ledShift();
+Set Fireled at position 1 to Green:
 
-// Show led rainbow and rotate
-eggbit.ledRainbow();
-eggbit.ledRotate();
+```block
+eggbit.setPixelColor(0, 0x00ff00)
+```
 
-// Set brightness of leds
-eggbit.ledBrightness(100);
+Show rainbow across all Fireleds (Red..Violet):
+
+```block
+eggbit.ledRainbow()
+```
+
+Shift FireLeds up one place, blanking the first FireLed:
+
+```block
+eggbit.ledShift()
+```
+
+Rotate FireLeds by shifting up one and replace the first with the last:
+
+```block
+eggbit.ledRotate()
+```
+
+Set brightness of leds to 100:
+
+```block
+eggbit.ledBrightness(100)
 ```
 
 ## Larson Scanner
 
-The nine FireLeds can be set to operate a Larson scanner (as used in Knight Rider). You can select the colour and the speed of operation. This examples sets the scanner to Red with a 100ms delay between updates:
+The nine FireLeds can be set to operate a Larson scanner (as used in Knight Rider). You can select the colour and the speed of operation.
+This example uses the `startScanner(...)` function to set the scanner to Red with a 100ms delay between updates:
 
-```sig
+```block
 eggbit.startScanner(0xFF0000, 100)
 ```
 
-Stop the scanner when required using the stopScanner function:
+Stop the scanner when required using the `stopScanner(...)` function:
 
-```sig
+```block
 eggbit.stopScanner()
 ```
 
 ## Bar Graph
 
-The nine FireLeds can be setup as a bargraph. First define the minimum and maximum values to use, as well as the start and end colours. This example sets the range to be from 0 to 100, the start colour to Green and the end colour to Red:
+The nine FireLeds can be setup as a bargraph using the `setBargraph(...)` function.
+First define the minimum and maximum values to use, as well as the start and end colours.
+This example sets the range to be from 0 to 100, the start colour to Green and the end colour to Red:
 
-```sig
+```block
 eggbit.setBargraph(0, 100, 0x00FF00, 0xFF0000)
 ```
 
-Then draw the bargraph using a number in the range given. Numbers outside the range will be treated as either the minimum or maximum. This example uses 50 so will light up half the FireLeds:
+Then draw the bargraph using a number in the range givenm using the `drawBargraph(...)` function.
+Numbers outside the range will be treated as either the minimum or maximum.
+This example uses 50 so will light up half the FireLeds:
 
-```sig
+```block
 eggbit.drawBargraph(50)
 ```
 
